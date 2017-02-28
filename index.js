@@ -42,23 +42,25 @@ var authorize_url = env.AUTH0_URL + '/authorize?response_type=code&scope=openid%
   '&code_challenge=' + verifier_challenge + '&code_challenge_method=S256';
 opn(authorize_url);
 
-promise.promise.then(function(code) {
-  request.post(env.AUTH0_URL + '/oauth/token',
-    {
-      json: {
-        code: code,
-        code_verifier: verifier,
-        client_id: env.AUTH0_CLIENT_ID,
-        grant_type: 'authorization_code',
-        redirect_uri: env.AUTH0_CALLBACK_URL
+promise.promise
+  .then(function(code) {
+    request.post(env.AUTH0_URL + '/oauth/token',
+      {
+        json: {
+          code: code,
+          code_verifier: verifier,
+          client_id: env.AUTH0_CLIENT_ID,
+          grant_type: 'authorization_code',
+          redirect_uri: env.AUTH0_CALLBACK_URL
+        }
+      },
+      function(err, response, body){
+        //TODO: do something useful with the token (in body)
+        //CLI is ready to call APIs, etc.
+        console.log('error:', err); // Print the error if one occurred
+        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+        console.log('body:', body);
       }
-    },
-    function(err, response, body){
-      //TODO: do something useful with the token (in body)
-      //CLI is ready to call APIs, etc.
-      console.log('error:', err); // Print the error if one occurred
-      console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-      console.log('body:', body);
-    }
-  );
-});
+    );
+  })
+  .fail(function(err) { console.log(err); });
