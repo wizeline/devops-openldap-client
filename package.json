@@ -1,0 +1,21 @@
+{
+  "name": "devops-openldap-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "devops-openldap-client": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "crypto": "0.0.3",
+    "dotenv": "^4.0.0",
+    "opn": "^4.0.2",
+    "q": "^1.4.1",
+    "request": "^2.79.0"
+  }
+}
