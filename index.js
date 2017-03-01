@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-require('dotenv').load();
+require('dotenv').config({ path: __dirname + '/.env' });
 
 var opn = require('opn');
 var request = require('request');
@@ -20,7 +20,7 @@ http.createServer(function (req, res) {
   var matches = req.url.match(/code=([^&]+).*$/);
   if (matches instanceof Array && matches.length >= 2) {
     promise.resolve(matches[1]);
-    res.write(matches[1]);
+    res.write('Ok');
   } else {
     promise.reject('Unable to find code');
   }
@@ -40,7 +40,10 @@ var verifier_challenge = base64url(crypto.createHash('sha256').update(verifier).
 var authorize_url = env.AUTH0_URL + '/authorize?response_type=code&scope=openid%20profile&' +
   'client_id=' + env.AUTH0_CLIENT_ID + '&redirect_uri=' + env.AUTH0_CALLBACK_URL +
   '&code_challenge=' + verifier_challenge + '&code_challenge_method=S256';
-opn(authorize_url);
+opn(authorize_url)
+  .catch(function(err) {
+    console.log('Error opening ' + authorize_url);
+  });
 
 promise.promise
   .then(function(code) {
@@ -60,7 +63,11 @@ promise.promise
         console.log('error:', err); // Print the error if one occurred
         console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
         console.log('body:', body);
+        process.exit(0);
       }
     );
   })
-  .fail(function(err) { console.log(err); });
+  .fail(function(err) {
+    console.log(err);
+    process.exit(-1);
+  });
