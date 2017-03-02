@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.1.5",
     "co": "^4.6.0",
     "co-prompt": "^1.0.0",
     "crypto": "0.0.3",
