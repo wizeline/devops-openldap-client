@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "co": "^4.6.0",
+    "co-prompt": "^1.0.0",
     "crypto": "0.0.3",
     "dotenv": "^4.0.0",
     "opn": "^4.0.2",

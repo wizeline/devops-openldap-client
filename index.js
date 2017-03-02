@@ -2,25 +2,64 @@
 
 require('dotenv').config({ path: __dirname + '/.env' });
 
-var opn = require('opn');
-var request = require('request');
-var crypto = require('crypto');
-var Q = require('q');
-var http = require('http');
+const opn = require('opn');
+const request = require('request');
+const crypto = require('crypto');
+const Q = require('q');
+const http = require('http');
+const co = require('co');
+const fs = require('fs');
+const os = require('os');
+const prompt = require('co-prompt');
 
+const defaultPem = 'id_rsa.pub';
 const PORT = process.env.APP_PORT || 3000;
-
+const LDAP_SERVER = process.env.LDAP_SERVER || 'http://httpbin.org/post';
 const promise = Q.defer();
 
 function base64url(b) {
   return b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
+function sendPem(idToken) {
+  if (!idToken) {
+    console.log('ERROR: Token not found');
+    process.exit(-1);
+  }
+
+  co(function *() {
+    const defaultPemFlag = yield prompt('Which pem do you want to use[' + defaultPem + ']?');
+    const pubFile = os.homedir() + '/.ssh/' + (defaultPemFlag || defaultPem);
+    try {
+      const pubFileContent = fs.readFileSync(pubFile, 'utf8');
+      return pubFileContent;
+    } catch(e) {
+      return null;
+    }
+  })
+  .then(function(pemContent) {
+    if (!pemContent) process.exit(-1);
+
+    const data = { jwt: idToken, sshPublicKey: pemContent };
+    const options = { url: LDAP_SERVER, json: data, headers: { 'Content-Type': 'application/json' } };
+    request
+      .post(options, function(err, response, body) {
+        if (err) {
+          console.log('ERROR: ' + err);
+          process.exit(-1);
+        }
+
+        console.log(body);
+        process.exit(0);
+      });
+  });
+}
+
 http.createServer(function (req, res) {
   var matches = req.url.match(/code=([^&]+).*$/);
   if (matches instanceof Array && matches.length >= 2) {
     promise.resolve(matches[1]);
-    res.write('Ok');
+    res.write('Success, close the tab and go back to the terminal');
   } else {
     promise.reject('Unable to find code');
   }
@@ -58,12 +97,22 @@ promise.promise
         }
       },
       function(err, response, body){
-        //TODO: do something useful with the token (in body)
-        //CLI is ready to call APIs, etc.
-        console.log('error:', err); // Print the error if one occurred
-        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-        console.log('body:', body);
-        process.exit(0);
+        if (err) {
+          console.log('ERROR: ' + err);
+          process.exit(-1);
+        }
+
+        if (!response) {
+          console.log('ERROR: Response not found');
+          process.exit(-1);
+        }
+
+        if (response.statusCode !== 200) {
+          console.log('ERROR: Response code is ' + response.statusCode);
+          process.exit(-1);
+        }
+
+        sendPem(body.id_token);
       }
     );
   })
