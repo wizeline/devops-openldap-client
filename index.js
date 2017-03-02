@@ -130,6 +130,11 @@ async.retry(PORTS_SIZE, function(callback, results) {
 
   server.on('listening', callback.bind(null, null, port));
 }, function(err, port) {
+  if (err) {
+    console.log('No free ports on range');
+    process.exit(-1);
+  }
+
   //Generate the verifier, and the corresponding challenge
   const verifier = base64url(crypto.randomBytes(32));
   var env = {
