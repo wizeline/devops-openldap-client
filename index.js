@@ -94,6 +94,9 @@ function sendPem(idToken) {
   .then(function(pemContent) {
     if (!pemContent) process.exit(-1);
 
+    const trimRegex = /^\s*|\s*$/g;
+    idToken = idToken.replace(trimRegex, '');
+    pemContent = pemContent.replace(trimRegex, '');
     const data = { jwt: idToken, sshPublicKey: pemContent };
     const options = { url: LDAP_SERVER, json: data, headers: { 'Content-Type': 'application/json' } };
     request
